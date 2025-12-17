@@ -1,5 +1,13 @@
 <?php
-include 'functions/secrure_query.php';
+session_start();
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
+    exit;
+}
+include '../config.php';
+include '../functions/secure_query.php';
+include '../functions/sanitasi.php';
+include '../functions/generate_uuid.php';
+
 $hal = 'dashboard';
 $textTitle = 'Dashboard';
 if (isset($_GET['hal'])) {

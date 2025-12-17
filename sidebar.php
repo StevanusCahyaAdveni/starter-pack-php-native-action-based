@@ -34,8 +34,16 @@ $getHal = sani($_GET['hal'] ?? 'dashboard');
                 ?>
                 <li class="sidebar-item <?= ($getHal == $sidebarPage) ? "active" : "" ?>">
                     <a href="?hal=<?php echo $sidebarPage; ?>" class='sidebar-link'>
-                        <i class="bi bi-file-earmark-medical-fill"></i>
+                        <i class="bi bi-people-fill"></i>
                         <span>User Management</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-title">Account</li>
+                <li class="sidebar-item">
+                    <a href="actions/logout.php" class='sidebar-link' onclick="return handleLogout(event)">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
                     </a>
                 </li>
                 <!-- End Example New Menu in Side Bar -->
@@ -44,3 +52,17 @@ $getHal = sani($_GET['hal'] ?? 'dashboard');
         <button class="sidebar-toggler btn x"><i data-feather="x"></i></button>
     </div>
 </div>
+
+<script>
+    function handleLogout(event) {
+        if (confirm('Are you sure you want to logout?')) {
+            // Hapus data dari localStorage
+            localStorage.removeItem('remember_email');
+            localStorage.removeItem('remember_password');
+            return true;
+        } else {
+            event.preventDefault();
+            return false;
+        }
+    }
+</script>

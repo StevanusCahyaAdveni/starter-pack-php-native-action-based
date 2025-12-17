@@ -19,9 +19,9 @@ function makePagination($con, $query, $jumlahLimit = 10)
     $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $currentPage = max(1, $currentPage); // Minimal halaman 1
 
-    // Hitung total data
+    // Hitung total data menggunakan querySecure
     $countQuery = "SELECT COUNT(*) as total FROM ($query) as count_table";
-    $countResult = mysqli_query($con, $countQuery);
+    $countResult = querySecure($con, $countQuery);
     $totalData = 0;
 
     if ($countResult) {
@@ -40,9 +40,9 @@ function makePagination($con, $query, $jumlahLimit = 10)
     // Hitung offset
     $offset = ($currentPage - 1) * $jumlahLimit;
 
-    // Query dengan LIMIT
-    $limitedQuery = "$query LIMIT $jumlahLimit OFFSET $offset";
-    $result = mysqli_query($con, $limitedQuery);
+    // Query dengan LIMIT menggunakan prepared statement
+    $limitedQuery = "$query LIMIT ? OFFSET ?";
+    $result = querySecure($con, $limitedQuery, [$jumlahLimit, $offset], 'ii');
 
     // Simpan data ke array
     $data = [];
