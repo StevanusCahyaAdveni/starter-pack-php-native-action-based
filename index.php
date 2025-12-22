@@ -78,13 +78,24 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 
 // User sudah login, lanjutkan ke dashboard
 ?>
+<?php
+$hal = 'dashboard';
+$textTitle = 'Dashboard';
+if (isset($_GET['hal'])) {
+    $getHal = sani($_GET['hal']);
+    $hal = str_replace('_', '/', $getHal);
+    $lastUnderscore = strrpos($getHal, '_');
+    $titlePart = ($lastUnderscore !== false) ? substr($getHal, $lastUnderscore + 1) : $getHal;
+    $textTitle = ucwords(str_replace('-', ' ', $titlePart));
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mazer Admin Dashboard</title>
+    <title><?php echo $textTitle; ?> - <?= $_SESSION['admin']['fullname'] ?></title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -107,17 +118,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
                     <i class="bi bi-justify fs-3"></i>
                 </a>
             </header>
-            <?php
-            $hal = 'dashboard';
-            $textTitle = 'Dashboard';
-            if (isset($_GET['hal'])) {
-                $getHal = sani($_GET['hal']);
-                $hal = str_replace('_', '/', $getHal);
-                $lastUnderscore = strrpos($getHal, '_');
-                $titlePart = ($lastUnderscore !== false) ? substr($getHal, $lastUnderscore + 1) : $getHal;
-                $textTitle = ucwords(str_replace('-', ' ', $titlePart));
-            }
-            ?>
+
             <div class="page-heading mb-0">
                 <h3><?php echo $textTitle; ?></h3>
             </div>
@@ -154,40 +155,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
         </div>
     </div>
 
-    <script>
-        // Fungsi untuk menampilkan gambar di modal
-        function showImgLink(url) {
-            const modalImage = document.getElementById('modalImage');
-            modalImage.src = url;
 
-            const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            imageModal.show();
-        }
-
-        // Otomatis tambahkan event listener ke semua tag img kecuali yang ada di modal
-        document.addEventListener('DOMContentLoaded', function() {
-            const allImages = document.querySelectorAll('img');
-
-            allImages.forEach(function(img) {
-                // Cek apakah img berada di dalam modal
-                const isInsideModal = img.closest('#imageModal');
-
-                // Hanya tambahkan event jika TIDAK di dalam modal
-                if (!isInsideModal) {
-                    // Tambahkan cursor pointer untuk indikasi bisa diklik
-                    img.style.cursor = 'pointer';
-
-                    // Tambahkan event click
-                    img.addEventListener('click', function() {
-                        const imgSrc = this.getAttribute('src');
-                        if (imgSrc && imgSrc !== '') {
-                            showImgLink(imgSrc);
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 
     <script src="assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
     <script src="assets/js/bootstrap.bundle.min.js"></script>
@@ -196,6 +164,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
     <script src="assets/js/pages/dashboard.js"></script>
 
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/upImage.js"></script>
 </body>
 
 </html>

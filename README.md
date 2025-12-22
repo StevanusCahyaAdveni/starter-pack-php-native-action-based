@@ -1,6 +1,22 @@
 # PHP Native Action-Based Framework
 
-Framework PHP native sederhana dengan sistem routing otomatis, autentikasi berbasis session + localStorage, dan secure query dengan prepared statements.
+Framework PHP native sederhana dengan sistem routing otomatis, autentikasi berbasis session + localStorage, secure query dengan prepared statements, dan **CRUD Generator** otomatis.
+
+---
+
+## ✨ Update Terbaru (December 2024)
+
+### 🆕 Fitur Baru
+- **CRUD Generator Otomatis**: Generate SQL, Page, dan Action file secara otomatis dengan form builder
+- **Auto-Login via localStorage**: Remember me feature dengan auto-login seamless
+- **Image Preview Modal**: Klik gambar manapun untuk preview fullscreen
+- **Session Admin Data**: Akses lengkap data user yang login melalui `$_SESSION['admin']`
+- **Dynamic Page Title**: Title browser menggunakan nama user yang sedang login
+
+### 🔄 Perbaikan
+- Login page redirect protection (tidak bisa akses jika sudah login)
+- Refactoring JavaScript untuk image preview (dipindah ke file terpisah)
+- Improved code organization dan struktur file
 
 ---
 
@@ -122,9 +138,10 @@ Framework dilengkapi autentikasi lengkap dengan session management dan localStor
 - ✅ Login dengan email & password
 - ✅ Password verification dengan `password_verify()`
 - ✅ Remember me dengan localStorage
-- ✅ Auto-fill credentials dari localStorage
+- ✅ Auto-redirect jika sudah login (via localStorage check)
 - ✅ Toggle show/hide password
 - ✅ Session management
+- ✅ Complete user data di `$_SESSION['admin']`
 
 **Flow Login:**
 ```
@@ -135,6 +152,7 @@ Framework dilengkapi autentikasi lengkap dengan session management dan localStor
 5. Set session variables:
    - user_id, user_fullname, user_username
    - user_email, user_photo, is_logged_in
+   - admin (complete user data array)
 6. Jika remember me checked:
    - Save email & password ke localStorage via JavaScript
 7. Redirect ke dashboard
@@ -148,6 +166,21 @@ $_SESSION['user_username']  // Username
 $_SESSION['user_email']     // Email
 $_SESSION['user_photo']     // Path foto profil
 $_SESSION['is_logged_in']   // Boolean login status
+$_SESSION['admin']          // Complete user data (array)
+```
+
+**🆕 Login Page Protection:**
+```php
+// login.php - Redirect jika sudah login
+if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
+    header('Location: index.php');
+    exit;
+}
+
+// Cek localStorage saat page load
+if (savedEmail && savedPassword) {
+    window.location.href = 'index.php'; // Auto-redirect ke index untuk auto-login
+}
 ```
 
 ### 🔹 Auto-Login dari localStorage
@@ -210,14 +243,29 @@ header('Location: ../login.php');
 exit;
 ```
 
-**JavaScript clear localStorage:**
+**JavaScript clear localStorage (di sidebar.php):**
 ```javascript
-// Di sidebar.php
-function handleLogout() {
-    localStorage.removeItem('remember_email');
-    localStorage.removeItem('remember_password');
-    window.location.href = 'actions/logout.php';
+function handleLogout(event) {
+    if (confirm('Are you sure you want to logout?')) {
+        // Hapus data dari localStorage
+        localStorage.removeItem('remember_email');
+        localStorage.removeItem('remember_password');
+        return true; // Continue ke logout.php
+    } else {
+        event.preventDefault();
+        return false;
+    }
 }
+```
+
+**HTML (di sidebar.php):**
+```html
+<li class="sidebar-item">
+    <a href="actions/logout.php" class='sidebar-link' onclick="return handleLogout(event)">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
+    </a>
+</li>
 ```
 
 ---
@@ -758,7 +806,75 @@ actions/pages/users/user-management.php
 
 ---
 
-## 🛠️ CLI Generator
+## 🆕 CRUD Generator (GUI)
+
+**File:** `pages/crud-generate.php` dan `actions/pages/crud-generate.php`
+
+### 🔹 Fitur CRUD Generator
+
+Generator CRUD otomatis dengan **form builder** yang menghasilkan 3 file sekaligus:
+1. **SQL File** - Database schema dengan UUID primary key
+2. **Page File** - View dengan CRUD interface lengkap
+3. **Action File** - Handler untuk Create, Read, Update, Delete
+
+### 🔹 Cara Menggunakan
+
+1. Akses menu **"Generate CRUD"** di sidebar
+2. Isi form:
+   - **Direktori & File**: Contoh `products/product-list` (akan buat struktur folder)
+   - **Nama Table DB**: Contoh `products` (nama table database)
+   - **Struktur Kolom**: Tambah kolom dengan button "Tambah Kolom"
+     - Nama Kolom: `name`, `price`, `description`, dll
+     - Label: Label yang tampil di form
+     - Tipe Data: VARCHAR, INT, TEXT, DATE, DATETIME
+   - **Opsi Tambahan**: 
+     - ✅ Timestamps (created_at, updated_at)
+3. Klik **"Generate CRUD"**
+
+### 🔹 Output yang Dihasilkan
+
+**1. SQL File:** `database/{table_name}_{random}_{timestamp}.sql`
+```sql
+-- Auto-generated table structure
+CREATE TABLE IF NOT EXISTS `products` (
+  `id` VARCHAR(36) NOT NULL COMMENT 'Primary Key - UUID v4',
+  `name` VARCHAR(255) NOT NULL COMMENT 'Product Name',
+  `price` INT(11) NOT NULL COMMENT 'Price',
+  `description` TEXT NOT NULL COMMENT 'Description',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+**2. Page File:** `pages/products/product-list.php`
+- ✅ Table dengan pagination
+- ✅ Search form dengan query params preserved
+- ✅ Add Modal (Bootstrap)
+- ✅ Edit Modal (Bootstrap)
+- ✅ Delete dengan confirmation
+- ✅ Auto-fill edit form via JavaScript
+
+**3. Action File:** `actions/pages/products/product-list.php`
+- ✅ CREATE dengan UUID auto-generate
+- ✅ UPDATE dengan preserve data
+- ✅ DELETE dengan cascade
+- ✅ Prepared statements untuk security
+- ✅ Session message untuk feedback
+- ✅ Auto-calculated relative paths
+
+### 🔹 Keuntungan CRUD Generator
+
+- 🚀 **Cepat**: Generate 3 file dalam 1 klik
+- 🔐 **Secure**: Menggunakan prepared statements
+- 📦 **Complete**: CRUD lengkap dengan search & pagination
+- 🎨 **Bootstrap UI**: Interface modern & responsive
+- 📁 **Auto Directory**: Buat struktur folder otomatis
+- 🆔 **UUID Ready**: Primary key menggunakan UUID v4
+
+---
+
+## 🛠️ CLI Generator (Legacy)
 
 **File:** `generate.php`
 
@@ -834,11 +950,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ## 🎨 UI Features
 
+### 🔹 Dynamic Page Title
+
+Page title di browser menggunakan nama user yang sedang login:
+
+**Di index.php:**
+```html
+<title><?php echo $textTitle; ?> - <?= $_SESSION['admin']['fullname'] ?></title>
+```
+
+**Output:**
+```
+Dashboard - John Doe
+User Management - John Doe
+Product List - John Doe
+```
+
 ### 🔹 Image Preview Modal
 
 Framework include modal otomatis untuk preview gambar. Semua tag `<img>` dapat diklik untuk memperbesar.
 
-**JavaScript (sudah included di index.php):**
+**File:** `assets/js/upImage.js`
+
 ```javascript
 function showImgLink(url) {
     const modalImage = document.getElementById('modalImage');
@@ -863,6 +996,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+```
+
+**Modal HTML (di index.php):**
+```html
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Preview" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+**Include di index.php:**
+```html
+<script src="assets/js/upImage.js"></script>
 ```
 
 ### 🔹 Alert Messages

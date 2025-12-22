@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_photo'] = $user['photo_profile'];
             $_SESSION['is_logged_in'] = true;
-
+            $_SESSION['admin'] = $user;
             // Set data untuk localStorage (akan di-handle via JavaScript)
             if ($remember) {
                 $_SESSION['remember_email'] = $email;

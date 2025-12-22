@@ -38,6 +38,20 @@ $getHal = sani($_GET['hal'] ?? 'dashboard');
                         <span>User Management</span>
                     </a>
                 </li>
+                <!-- End Example New Menu in Side Bar -->
+
+                <li class="sidebar-title">CRUD</li>
+                <?php
+                $sidebarPage = "crud-generate";
+                ?>
+                <li class="sidebar-item <?= ($getHal == $sidebarPage) ? "active" : "" ?>">
+                    <a href="?hal=<?php echo $sidebarPage; ?>" class='sidebar-link'>
+                        <i class="bi bi-people-fill"></i>
+                        <span>Generate CRUD</span>
+                    </a>
+                </li>
+
+
 
                 <li class="sidebar-title">Account</li>
                 <li class="sidebar-item">

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mazer Admin Dashboard</title>
+    <title>Authentication</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -87,6 +87,13 @@
                     <div class="login-body">
                         <?php
                         session_start();
+
+                        // Redirect jika sudah login
+                        if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
+                            header('Location: index.php');
+                            exit;
+                        }
+
                         if (isset($_SESSION['message'])): ?>
                             <div class="alert alert-<?= $_SESSION['message_type'] == 'success' ? 'success' : 'danger' ?> alert-dismissible fade show">
                                 <?= $_SESSION['message'] ?>
@@ -166,11 +173,11 @@
         window.addEventListener('DOMContentLoaded', function() {
             const savedEmail = localStorage.getItem('remember_email');
             const savedPassword = localStorage.getItem('remember_password');
-            
+
             if (savedEmail && savedPassword) {
-                document.getElementById('email').value = savedEmail;
-                document.getElementById('password').value = savedPassword;
-                document.getElementById('remember').checked = true;
+                // Redirect ke index.php jika ada credentials tersimpan
+                // Index.php akan handle auto-login
+                window.location.href = 'index.php';
             }
         });
 
@@ -179,7 +186,7 @@
             const rememberCheckbox = document.getElementById('remember');
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
+
             if (rememberCheckbox.checked) {
                 // Save credentials to localStorage
                 localStorage.setItem('remember_email', email);
@@ -191,7 +198,7 @@
             }
         });
     </script>
-    
+
     <script src="assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
     <script src="assets/js/bootstrap.bundle.min.js"></script>
 
