@@ -4,16 +4,23 @@ Framework PHP native sederhana dengan sistem routing otomatis, autentikasi berba
 
 ---
 
-## ✨ Update Terbaru (December 2024)
+## ✨ Update Terbaru (January 2026)
 
 ### 🆕 Fitur Baru
 - **CRUD Generator Otomatis**: Generate SQL, Page, dan Action file secara otomatis dengan form builder
-- **Auto-Login via localStorage**: Remember me feature dengan auto-login seamless
+- **Modular Auto-Login System**: Auto-login menggunakan API endpoint terpisah (loginauto.php)
+- **Variable-based Routing**: Routing menggunakan variable $content untuk include pages
 - **Image Preview Modal**: Klik gambar manapun untuk preview fullscreen
 - **Session Admin Data**: Akses lengkap data user yang login melalui `$_SESSION['admin']`
 - **Dynamic Page Title**: Title browser menggunakan nama user yang sedang login
+- **Dynamic App Name**: Logo sidebar menggunakan variable $appName dari config
 
 ### 🔄 Perbaikan
+- **Auto-Login Refactoring**: Dipisah menjadi 3 file modular (auto-cek-login-html.php, auto-cek-login-action.php, loginauto.php)
+- **Security Enhancement**: Auto-clear localStorage saat login gagal dengan flag $_SESSION['clear_remember']
+- **Self-Protection**: User tidak bisa delete akun sendiri di user management
+- **Routing System**: Perubahan dari function contenByRoute() ke variable $content
+- **Database Config**: Update default database name dan tambah $appName variable
 - Login page redirect protection (tidak bisa akses jika sudah login)
 - Refactoring JavaScript untuk image preview (dipindah ke file terpisah)
 - Improved code organization dan struktur file
@@ -45,7 +52,10 @@ php-native-action-based/
 │   ├── secure_query.php        # Prepared statement wrappers
 │   ├── generate_uuid.php       # UUID v4 generator
 │   ├── pagination.php          # Pagination dengan prepared statement
-│   └── upload_file.php         # File upload dengan kompresi otomatis
+│   ├── upload_file.php         # File upload dengan kompresi otomatis
+│   ├── auto-routing.php        # Variable-based routing system
+│   ├── auto-cek-login-html.php # Auto-login check untuk HTML pages
+│   └── auto-cek-login-action.php # Auto-login check untuk action files
 ├── pages/                       # Views (halaman konten)
 │   ├── dashboard.php
 │   └── users/
@@ -81,22 +91,37 @@ Framework menggunakan sistem routing **tanpa konfigurasi manual**. File di-load 
 
 ### 🔹 Routing di index.php (View)
 
+**Routing sekarang menggunakan file terpisah:** `functions/auto-routing.php`
+
+```php
+<?php
+session_start();
+include 'config.php';
+include 'functions/sanitasi.php';
+include 'functions/secure_query.php';
+include 'functions/auto-routing.php';  // Load routing system
+include 'functions/auto-cek-login-html.php';  // Auto-login check
+?>
+
+<!-- HTML content -->
+<div class="page-content">
+    <?php include $content; ?>  <!-- Variable $content dari auto-routing.php -->
+</div>
+```
+
+**File auto-routing.php:**
 ```php
 <?php
 $hal = 'dashboard';
 $textTitle = 'Dashboard';
-
 if (isset($_GET['hal'])) {
     $getHal = sani($_GET['hal']);
-    $hal = str_replace('_', '/', $getHal);  // Convert underscore to slash
-    
-    // Generate title dari bagian terakhir
+    $hal = str_replace('_', '/', $getHal);
     $lastUnderscore = strrpos($getHal, '_');
     $titlePart = ($lastUnderscore !== false) ? substr($getHal, $lastUnderscore + 1) : $getHal;
     $textTitle = ucwords(str_replace('-', ' ', $titlePart));
 }
-
-include 'pages/' . $hal . '.php';
+$content = 'pages/' . $hal . '.php';  // Variable untuk di-include
 ?>
 ```
 
@@ -183,28 +208,93 @@ if (savedEmail && savedPassword) {
 }
 ```
 
-### 🔹 Auto-Login dari localStorage
+### 🔹 Auto-Login System (Modular Approach)
 
-**File:** `index.php` (sebelum dashboard loaded)
+**Framework menggunakan 3 file terpisah untuk auto-login:**
+
+#### 1. functions/auto-cek-login-html.php
+
+**Untuk:** HTML pages (index.php, dll)
 
 **Flow:**
 ```
 1. Cek session is_logged_in
 2. Jika tidak login:
-   - Tampilkan loading page
+   - Tampilkan loading screen dengan spinner
    - JavaScript cek localStorage
    - Jika ada credentials:
-     → Auto-submit login form (POST ke actions/login.php)
+     → Fetch POST ke actions/loginauto.php
+     → Jika success: reload page
+     → Jika gagal: redirect ke login.php
    - Jika tidak ada:
      → Redirect ke login.php
 3. Jika login:
-   - Lanjut ke dashboard
+   - Continue load page normal
 ```
 
-**Keamanan:**
-- Password tetap di-verify via `password_verify()` di server
-- Auto-login menggunakan POST request (bukan bypass session)
-- localStorage hanya untuk convenience, bukan authentication
+#### 2. functions/auto-cek-login-action.php
+
+**Untuk:** Action handlers (actions/index.php)
+
+**Flow:**
+```
+1. Cek session is_logged_in
+2. Jika tidak login:
+   - Cek POST parameter auto_login
+   - Jika ada: verify credentials dan set session
+   - Jika tidak ada atau gagal: exit
+3. Jika login:
+   - Continue execute action
+```
+
+#### 3. actions/loginauto.php
+
+**API Endpoint untuk auto-login**
+
+**Request:**
+```javascript
+fetch('actions/loginauto.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        email: savedEmail,
+        password: savedPassword
+    })
+});
+```
+
+**Response:**
+```json
+{
+    "success": true/false,
+    "message": "Login berhasil!",
+    "clear_storage": true/false,  // Flag untuk clear localStorage
+    "user": { "id": "...", "fullname": "..." }
+}
+```
+
+**Integrasi:**
+
+```php
+// index.php
+include 'functions/auto-cek-login-html.php';
+
+// actions/index.php
+include '../functions/auto-cek-login-action.php';
+
+// login.php (check di JavaScript)
+if (result.clear_storage) {
+    localStorage.removeItem('remember_email');
+    localStorage.removeItem('remember_password');
+}
+```
+
+**Security Features:**
+- API menggunakan JSON POST (bukan form data)
+- Password tetap di-verify dengan password_verify()
+- Auto-clear localStorage jika credentials salah
+- Session flag $_SESSION['clear_remember'] untuk trigger clear localStorage
+- No bypass authentication - semua tetap melalui verification
 
 ### 🔹 Register System
 
@@ -1070,11 +1160,25 @@ CREATE TABLE `users` (
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'php_native_action');
+define('DB_NAME', 'project_php_action_based');  // Updated default name
 
 $con = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 mysqli_set_charset($con, "utf8mb4");
 date_default_timezone_set('Asia/Jakarta');
+
+// App Configuration
+$appName = "Little PHP Framework";  // Digunakan di sidebar dan title
+```
+
+**Penggunaan $appName:**
+
+```php
+// sidebar.php
+<div class="logo">
+    <a href="index.php">
+        <h3><?php echo $appName; ?></h3>
+    </a>
+</div>
 ```
 
 ### 🔹 PHP Requirements
