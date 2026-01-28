@@ -169,16 +169,52 @@
             }
         });
 
-        // Load saved credentials from localStorage on page load
-        window.addEventListener('DOMContentLoaded', function() {
+        // Check if need to clear localStorage (when login failed)
+        <?php if (isset($_SESSION['clear_remember'])): ?>
+            localStorage.removeItem('remember_email');
+            localStorage.removeItem('remember_password');
+            <?php unset($_SESSION['clear_remember']); ?>
+        <?php endif; ?>
+
+        // Auto-login jika ada localStorage
+        window.addEventListener('DOMContentLoaded', async function() {
             const savedEmail = localStorage.getItem('remember_email');
             const savedPassword = localStorage.getItem('remember_password');
 
             if (savedEmail && savedPassword) {
-                // Redirect ke index.php jika ada credentials tersimpan
-                // Index.php akan handle auto-login
-                window.location.href = 'index.php';
+                // Ada localStorage, coba hit API untuk auto-login
+                try {
+                    const response = await fetch('actions/loginauto.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: savedEmail,
+                            password: savedPassword
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Login berhasil via API, redirect ke index.php
+                        window.location.href = 'index.php';
+                    } else {
+                        // Login gagal, clear localStorage
+                        if (result.clear_storage) {
+                            localStorage.removeItem('remember_email');
+                            localStorage.removeItem('remember_password');
+                        }
+                        // Tetap di halaman login, tampilkan form
+                        console.log('Auto-login failed:', result.message);
+                    }
+                } catch (error) {
+                    // Error saat fetch API, tetap tampilkan form login
+                    console.error('Auto-login error:', error);
+                }
             }
+            // Jika tidak ada localStorage, form login akan tampil normal
         });
 
         // Save or clear credentials to/from localStorage on form submit
