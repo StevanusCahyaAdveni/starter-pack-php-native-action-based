@@ -1,94 +1,12 @@
 <?php
 session_start();
+include 'config.php';
 include 'functions/sanitasi.php';
 include 'functions/secure_query.php';
-include 'config.php';
-
-// Cek apakah user sudah login
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
-    // User belum login, cek localStorage via JavaScript
+include 'functions/auto-routing.php';
+include 'functions/auto-cek-login-html.php';
 ?>
-    <!DOCTYPE html>
-    <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Loading...</title>
-        <link rel="stylesheet" href="assets/css/bootstrap.css">
-        <style>
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                background: linear-gradient(90deg, #2d499d, #3f5491);
-            }
-
-            .loading-container {
-                text-align: center;
-                color: white;
-            }
-
-            .spinner-border {
-                width: 3rem;
-                height: 3rem;
-            }
-        </style>
-    </head>
-
-    <body>
-        <div class="loading-container">
-            <div class="spinner-border text-light mb-3" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Checking credentials...</p>
-        </div>
-
-        <!-- Hidden form for auto-login -->
-        <form id="autoLoginForm" action="actions/login.php" method="POST" style="display: none;">
-            <input type="email" name="email" id="autoEmail">
-            <input type="password" name="password" id="autoPassword">
-            <input type="checkbox" name="remember" checked>
-        </form>
-
-        <script>
-            // Cek localStorage saat page load
-            window.addEventListener('DOMContentLoaded', function() {
-                const savedEmail = localStorage.getItem('remember_email');
-                const savedPassword = localStorage.getItem('remember_password');
-
-                if (savedEmail && savedPassword) {
-                    // Ada data di localStorage, coba auto-login
-                    document.getElementById('autoEmail').value = savedEmail;
-                    document.getElementById('autoPassword').value = savedPassword;
-                    document.getElementById('autoLoginForm').submit();
-                } else {
-                    // Tidak ada data di localStorage, redirect ke login
-                    window.location.href = 'login.php';
-                }
-            });
-        </script>
-    </body>
-
-    </html>
-<?php
-    exit;
-}
-
-// User sudah login, lanjutkan ke dashboard
-?>
-<?php
-$hal = 'dashboard';
-$textTitle = 'Dashboard';
-if (isset($_GET['hal'])) {
-    $getHal = sani($_GET['hal']);
-    $hal = str_replace('_', '/', $getHal);
-    $lastUnderscore = strrpos($getHal, '_');
-    $titlePart = ($lastUnderscore !== false) ? substr($getHal, $lastUnderscore + 1) : $getHal;
-    $textTitle = ucwords(str_replace('-', ' ', $titlePart));
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -123,7 +41,7 @@ if (isset($_GET['hal'])) {
                 <h3><?php echo $textTitle; ?></h3>
             </div>
             <div class="page-content">
-                <?php include 'pages/' . $hal . '.php'; ?>
+                <?php include $content; ?>
             </div>
 
             <footer>
