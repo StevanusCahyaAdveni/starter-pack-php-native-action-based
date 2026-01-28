@@ -1,12 +1,14 @@
 <?php
 session_start();
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
-    exit;
-}
+
+
 include '../config.php';
 include '../functions/secure_query.php';
 include '../functions/sanitasi.php';
 include '../functions/generate_uuid.php';
+
+// Check if need auto-login via API
+include '../functions/auto-cek-login-action.php';
 
 $hal = 'dashboard';
 $textTitle = 'Dashboard';
