@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $_SESSION['message'] = 'Email dan password harus diisi!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed login attempt: empty email or password');
         header('Location: ../login.php');
         exit;
     }
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['message'] = 'Format email tidak valid!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed login attempt: invalid email format');  
         header('Location: ../login.php');
         exit;
     }
@@ -67,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Redirect ke dashboard
             $_SESSION['message'] = 'Login berhasil! Selamat datang ' . $user['fullname'];
             $_SESSION['message_type'] = 'success';
+            createLog($con, $email, 'Successful login');
             header('Location: ../index.php');
             exit;
         } else {
@@ -74,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['message'] = 'Email atau password salah!';
             $_SESSION['message_type'] = 'error';
             $_SESSION['clear_remember'] = true; // Flag untuk clear localStorage
+            createLog($con, $email, 'Failed login attempt: incorrect password');
             header('Location: ../login.php');
             exit;
         }
@@ -82,11 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['message'] = 'Email atau password salah!';
         $_SESSION['message_type'] = 'error';
         $_SESSION['clear_remember'] = true; // Flag untuk clear localStorage
+        createLog($con, $email, 'Failed login attempt: user not found');
         header('Location: ../login.php');
         exit;
     }
 } else {
     // Jika diakses langsung tanpa POST, redirect ke login
+    createLog($con, 'Unknown', 'Direct access to login action without POST');
     header('Location: ../login.php');
     exit;
 }

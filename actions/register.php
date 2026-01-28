@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($fullname) || empty($username) || empty($email) || empty($password) || empty($confirmPassword)) {
         $_SESSION['message'] = 'Semua field harus diisi!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: empty fields');
         header('Location: ../register.php');
         exit;
     }
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['message'] = 'Format email tidak valid!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: invalid email format');
         header('Location: ../register.php');
         exit;
     }
@@ -41,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
         $_SESSION['message'] = 'Username hanya boleh mengandung huruf, angka, dan underscore!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: invalid username format');
         header('Location: ../register.php');
         exit;
     }
@@ -49,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($username) < 3 || strlen($username) > 50) {
         $_SESSION['message'] = 'Username harus antara 3-50 karakter!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: username length invalid');
         header('Location: ../register.php');
         exit;
     }
@@ -57,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($password) < 6) {
         $_SESSION['message'] = 'Password minimal 6 karakter!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: password too short');
         header('Location: ../register.php');
         exit;
     }
@@ -65,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $confirmPassword) {
         $_SESSION['message'] = 'Password dan konfirmasi password tidak cocok!';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: password mismatch');
         header('Location: ../register.php');
         exit;
     }
@@ -80,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($checkEmail && mysqli_num_rows($checkEmail) > 0) {
         $_SESSION['message'] = 'Email sudah terdaftar! Silakan gunakan email lain.';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: email already registered');
         header('Location: ../register.php');
         exit;
     }
@@ -95,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($checkUsername && mysqli_num_rows($checkUsername) > 0) {
         $_SESSION['message'] = 'Username sudah digunakan! Silakan pilih username lain.';
         $_SESSION['message_type'] = 'error';
+        createLog($con, $email, 'Failed registration attempt: username already taken');
         header('Location: ../register.php');
         exit;
     }
@@ -113,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         [$userId, $fullname, $username, $email, $hashedPassword],
         'sssss'
     );
-
+    createLog($con, $email, 'Successful registration');
     $_SESSION['message'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
     $_SESSION['message_type'] = 'success';
     header('Location: ../login.php');

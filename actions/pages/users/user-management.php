@@ -25,13 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $types = 'ssssss';
         $insertResult = executeSecure($con, $query, $params, $types);
 
-        if ($insertResult) {
-            $_SESSION['message'] = 'Data berhasil ditambahkan!';
-            $_SESSION['message_type'] = 'success';
-        } else {
-            $_SESSION['message'] = 'Terjadi kesalahan saat menambahkan data.';
-            $_SESSION['message_type'] = 'error';
-        }
+        $_SESSION['message'] = 'Data berhasil ditambahkan!';
+        $_SESSION['message_type'] = 'success';
+        createLog($con, $_SESSION['admin']['email'], 'Successful user addition '.$fullname);
+
         echo "
             <script>
                 window.location.href = '../?hal=users_user-management';
@@ -85,13 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $types = 'ssssss';
         $updateResult = executeSecure($con, $query, $params, $types);
 
-        if ($updateResult) {
-            $_SESSION['message'] = 'Data berhasil diperbarui!';
-            $_SESSION['message_type'] = 'success';
-        } else {
-            $_SESSION['message'] = 'Terjadi kesalahan saat memperbarui data.';
-            $_SESSION['message_type'] = 'error';
-        }
+        $_SESSION['message'] = 'Data berhasil diperbarui!';
+        $_SESSION['message_type'] = 'success';
+        createLog($con, $_SESSION['admin']['email'], 'Successful user update '.$fullname);
         echo "
             <script>
                 window.location.href = '../?hal=users_user-management';
@@ -110,17 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Hapus data user
     $deleteResult = executeSecure($con, "DELETE FROM users WHERE id = ?", [$id], 's');
 
-    if ($deleteResult) {
-        // Hapus foto profile jika ada
-        if (!empty($photo_profile) && file_exists('../' . $photo_profile)) {
-            unlink('../' . $photo_profile);
-        }
-        $_SESSION['message'] = 'User berhasil dihapus!';
-        $_SESSION['message_type'] = 'success';
-    } else {
-        $_SESSION['message'] = 'Terjadi kesalahan saat menghapus user.';
-        $_SESSION['message_type'] = 'error';
+    createLog($con, $_SESSION['admin']['email'], 'Successful user deletion id '.$user['fullname']);
+    // Hapus foto profile jika ada
+    if (!empty($photo_profile) && file_exists('../' . $photo_profile)) {
+        unlink('../' . $photo_profile);
     }
+    $_SESSION['message'] = 'User berhasil dihapus!';
+    $_SESSION['message_type'] = 'success';
+   
     echo "
             <script>
                 window.location.href = '../?hal=users_user-management';
