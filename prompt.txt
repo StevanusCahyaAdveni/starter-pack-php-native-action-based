@@ -8,6 +8,8 @@ Anda sedang bekerja dengan PHP native framework yang menggunakan:
 - **Security-first**: Semua query menggunakan prepared statements, semua input di-sanitasi
 - **UUID primary keys**: Tidak ada auto-increment integer, semua ID adalah UUID v4
 - **Session + localStorage hybrid auth**: Session untuk security, localStorage untuk convenience
+- **Modular auto-login**: Auto-login menggunakan API endpoint terpisah (loginauto.php)
+- **Variable-based routing**: Menggunakan variable $content untuk include pages
 
 ---
 
@@ -34,7 +36,10 @@ Root/
 │   ├── secure_query.php      # querySecure(), executeSecure()
 │   ├── generate_uuid.php     # generate_uuid()
 │   ├── pagination.php        # makePagination(), showPagination()
-│   └── upload_file.php       # uploadFile() dengan kompresi
+│   ├── upload_file.php       # uploadFile() dengan kompresi
+│   ├── auto-routing.php      # Variable-based routing system
+│   ├── auto-cek-login-html.php   # Auto-login check untuk HTML pages
+│   └── auto-cek-login-action.php # Auto-login check untuk action files
 │
 ├── assets/                    # Static files
 │   ├── css/
@@ -59,6 +64,7 @@ Root/
 1. Underscore (`_`) di URL → Slash (`/`) di path file
 2. Dash (`-`) di URL → Spasi di page title
 3. Default page: `dashboard`
+4. Routing menggunakan **variable $content** bukan function
 
 **Contoh:**
 ```
@@ -70,6 +76,28 @@ URL: index.php?hal=admin_settings_config
 → File: pages/admin/settings/config.php
 → Title: Config
 ```
+
+### Auto-Routing Implementation (auto-routing.php)
+
+```php
+<?php
+$hal = 'dashboard';
+$textTitle = 'Dashboard';
+if (isset($_GET['hal'])) {
+    $getHal = sani($_GET['hal']);
+    $hal = str_replace('_', '/', $getHal);
+    $lastUnderscore = strrpos($getHal, '_');
+    $titlePart = ($lastUnderscore !== false) ? substr($getHal, $lastUnderscore + 1) : $getHal;
+    $textTitle = ucwords(str_replace('-', ' ', $titlePart));
+}
+$content = 'pages/' . $hal . '.php';
+?>
+```
+
+**Variable penting:**
+- `$hal` = path file tanpa pages/ dan .php
+- `$textTitle` = title halaman
+- `$content` = full path ke file page untuk di-include
 
 ### Struktur Mirror (View ↔ Action)
 
@@ -183,7 +211,52 @@ $password = !empty($password_new)
     : $password_old;  // Keep old if empty
 ```
 
-### 4. UUID Primary Keys
+### 4. Auto-Login System (Modular Approach)
+
+**Framework menggunakan 3 file terpisah untuk auto-login:**
+
+**1. functions/auto-cek-login-html.php** - Untuk halaman HTML (index.php):
+```php
+// Cek session, jika tidak login:
+// 1. Tampilkan loading screen
+// 2. JavaScript cek localStorage
+// 3. Jika ada credentials → hit loginauto.php API
+// 4. Jika berhasil → reload page
+// 5. Jika gagal → redirect ke login.php
+```
+
+**2. functions/auto-cek-login-action.php** - Untuk action handlers (actions/index.php):
+```php
+// Cek session, jika tidak login:
+// 1. Cek POST auto_login parameter
+// 2. Verify credentials
+// 3. Set session atau exit
+```
+
+**3. actions/loginauto.php** - API endpoint untuk auto-login:
+```php
+// Accept POST JSON request
+// Return JSON response:
+// { success: true/false, message: string, clear_storage: bool }
+```
+
+**Integration di index.php:**
+```php
+include 'functions/auto-cek-login-html.php'; // After routing
+```
+
+**Integration di actions/index.php:**
+```php
+include '../functions/auto-cek-login-action.php'; // After includes
+```
+
+**Security features:**
+- API menggunakan JSON POST (bukan form)
+- Password tetap di-verify dengan password_verify()
+- Auto-clear localStorage jika credentials salah
+- Session flag untuk clear localStorage
+
+### 5. UUID Primary Keys
 
 **ALWAYS gunakan UUID untuk primary key:**
 ```php
