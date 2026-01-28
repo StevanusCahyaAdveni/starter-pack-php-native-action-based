@@ -53,7 +53,7 @@
             <table class="table table-striped table-hover table-sm" id="table1" style="font-size: 12px;">
                 <thead>
                     <tr>
-                        <th>No</th>
+                        <th>No </th>
                         <th>Nama Lengkap</th>
                         <th>Username</th>
                         <th>Email</th>
@@ -63,6 +63,7 @@
                 </thead>
                 <tbody>
                     <?php
+                    // include 'config.php';
                     $no = 1;
                     // searching Mecanism
                     $whereClause = '';
@@ -73,9 +74,9 @@
                         $whereClause = " AND (fullname LIKE '$search' OR username LIKE '$search' OR email LIKE '$search')";
                     }
 
-                    $query = "SELECT * FROM users WHERE 1 = 1" . $whereClause . " ORDER BY id DESC";
+                    $query = "SELECT * FROM users WHERE 1 = 1 " . $whereClause . " ORDER BY id DESC";
 
-                    $pagination = makePagination($con, $query, 2);
+                    $pagination = makePagination($con,  $query, 10);
                     // End searching Mecanism
                     foreach ($pagination['data'] as $data) {
                     ?>
@@ -93,7 +94,9 @@
                             </td>
                             <td>
                                 <button ctype="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal" onclick="upData('<?= $data['id'] ?>', '<?= $data['fullname'] ?>', '<?= $data['username'] ?>', '<?= $data['email'] ?>', '<?= $data['password'] ?>')"><i class="bi bi-pencil"></i></button>
-                                <a href="actions/?hal=users_user-management&deleteUser=<?= $data['id'] ?>" onclick="return confirm('Apakah yakin ingin menghapus user ini ?')" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                                <?php if($data['id'] != $_SESSION['admin']['id']){?>
+                                    <a href="actions/?hal=users_user-management&deleteUser=<?= $data['id'] ?>" onclick="return confirm('Apakah yakin ingin menghapus user ini ?')" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                                <?php }?>
                             </td>
                         </tr>
                     <?php } ?>
