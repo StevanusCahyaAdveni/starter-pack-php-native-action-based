@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Pagination Helper Functions
  * Created: 2025-12-11
