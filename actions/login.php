@@ -73,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Password salah
             $_SESSION['message'] = 'Email atau password salah!';
             $_SESSION['message_type'] = 'error';
+            $_SESSION['clear_remember'] = true; // Flag untuk clear localStorage
             header('Location: ../login.php');
             exit;
         }
@@ -80,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // User tidak ditemukan
         $_SESSION['message'] = 'Email atau password salah!';
         $_SESSION['message_type'] = 'error';
+        $_SESSION['clear_remember'] = true; // Flag untuk clear localStorage
         header('Location: ../login.php');
         exit;
     }
