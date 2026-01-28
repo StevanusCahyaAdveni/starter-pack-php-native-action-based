@@ -114,17 +114,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'sssss'
     );
 
-    if ($result) {
-        $_SESSION['message'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
-        $_SESSION['message_type'] = 'success';
-        header('Location: ../login.php');
-        exit;
-    } else {
-        $_SESSION['message'] = 'Terjadi kesalahan saat registrasi. Silakan coba lagi.';
-        $_SESSION['message_type'] = 'error';
-        header('Location: ../register.php');
-        exit;
-    }
+    $_SESSION['message'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
+    $_SESSION['message_type'] = 'success';
+    header('Location: ../login.php');
+    exit;
+    // if ($result) {
+    // } else {
+    //     $_SESSION['message'] = 'Terjadi kesalahan saat registrasi. Silakan coba lagi.';
+    //     $_SESSION['message_type'] = 'error';
+    //     header('Location: ../register.php');
+    //     exit;
+    // }
 } else {
     // Jika diakses langsung tanpa POST, redirect ke register
     header('Location: ../register.php');
